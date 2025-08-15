@@ -42,19 +42,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user = get_or_create_user(db, update.effective_user)
         keyboard = [
-            [InlineKeyboardButton("📋 My Projects", callback_data="list_projects")],
-            [InlineKeyboardButton("➕ Create Project", callback_data="create_project")],
+            [InlineKeyboardButton("📋 پروژه‌های من", callback_data="list_projects")],
+            [InlineKeyboardButton("➕ ایجاد پروژه", callback_data="create_project")],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await update.message.reply_text(
-            f"Welcome to Project Manager Bot, {user.first_name}! 🚀\n\n"
-            "Manage your projects, sections, and tasks efficiently.",
+            f"به ربات مدیریت پروژه خوش آمدید، {user.first_name}! 🚀\n\n"
+            "پروژه‌ها، بخش‌ها و کارهای خود را به طور مؤثر مدیریت کنید.",
             reply_markup=reply_markup
         )
     except Exception as e:
         logger.error(f"Error in start command: {e}")
-        await update.message.reply_text("❌ An error occurred. Please try again.")
+        await update.message.reply_text("❌ خطایی رخ داد. لطفاً دوباره تلاش کنید.")
     finally:
         db.close()
 
@@ -71,7 +71,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if data == "list_projects":
             await list_projects(query, db, user)
         elif data == "create_project":
-            await query.edit_message_text("Send me the project name:")
+            await query.edit_message_text("نام پروژه را برایم ارسال کنید:")
             context.user_data['action'] = 'create_project'
         elif data.startswith("project_"):
             project_id = int(data.split("_")[1])
@@ -81,14 +81,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await show_sections(query, db, user, project_id)
         elif data.startswith("add_section_"):
             project_id = int(data.split("_")[2])
-            await query.edit_message_text("Send me the section name:")
+            await query.edit_message_text("نام بخش را برایم ارسال کنید:")
             context.user_data['action'] = f'add_section_{project_id}'
         elif data.startswith("section_"):
             section_id = int(data.split("_")[1])
             await show_tasks(query, db, user, section_id)
         elif data.startswith("add_task_"):
             section_id = int(data.split("_")[2])
-            await query.edit_message_text("Send me the task title:")
+            await query.edit_message_text("عنوان کار را برایم ارسال کنید:")
             context.user_data['action'] = f'add_task_{section_id}'
         elif data.startswith("task_"):
             task_id = int(data.split("_")[1])
@@ -99,22 +99,22 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update_task_status(query, db, user, task_id, status)
         elif data.startswith("add_member_"):
             project_id = int(data.split("_")[2])
-            await query.edit_message_text("Send me the Telegram ID of the user to add:")
+            await query.edit_message_text("شناسه تلگرام کاربری که می‌خواهید اضافه کنید را ارسال کنید:")
             context.user_data['action'] = f'add_member_{project_id}'
         elif data.startswith("set_channel_"):
             project_id = int(data.split("_")[2])
-            await query.edit_message_text("Send me the channel ID (with @channel_name or -100xxxxxxxxx):")
+            await query.edit_message_text("شناسه کانال را ارسال کنید (با @channel_name یا -100xxxxxxxxx):")
             context.user_data['action'] = f'set_channel_{project_id}'
         elif data == "back_to_main":
             keyboard = [
-                [InlineKeyboardButton("📋 My Projects", callback_data="list_projects")],
-                [InlineKeyboardButton("➕ Create Project", callback_data="create_project")],
+                [InlineKeyboardButton("📋 پروژه‌های من", callback_data="list_projects")],
+                [InlineKeyboardButton("➕ ایجاد پروژه", callback_data="create_project")],
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("Main Menu:", reply_markup=reply_markup)
+            await query.edit_message_text("منوی اصلی:", reply_markup=reply_markup)
     except Exception as e:
         logger.error(f"Error in button handler: {e}")
-        await query.edit_message_text("❌ An error occurred. Please try again.")
+        await query.edit_message_text("❌ خطایی رخ داد. لطفاً دوباره تلاش کنید.")
     finally:
         db.close()
 
@@ -128,138 +128,138 @@ async def list_projects(query, db: Session, user: User):
         ).all()
         
         if not projects:
-            keyboard = [[InlineKeyboardButton("➕ Create Project", callback_data="create_project")]]
+            keyboard = [[InlineKeyboardButton("➕ ایجاد پروژه", callback_data="create_project")]]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("No projects found. Create your first project!", reply_markup=reply_markup)
+            await query.edit_message_text("هیچ پروژه‌ای یافت نشد. اولین پروژه خود را ایجاد کنید!", reply_markup=reply_markup)
             return
         
         keyboard = []
         for project in projects:
-            role = "👑 Owner" if project.owner_id == user.id else "👤 Member"
+            role = "👑 مالک" if project.owner_id == user.id else "👤 عضو"
             keyboard.append([InlineKeyboardButton(
                 f"{project.name} ({role})", 
                 callback_data=f"project_{project.id}"
             )])
         
-        keyboard.append([InlineKeyboardButton("➕ Create Project", callback_data="create_project")])
+        keyboard.append([InlineKeyboardButton("➕ ایجاد پروژه", callback_data="create_project")])
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text("Your Projects:", reply_markup=reply_markup)
+        await query.edit_message_text("پروژه‌های شما:", reply_markup=reply_markup)
     except Exception as e:
         logger.error(f"Error in list_projects: {e}")
-        await query.edit_message_text("❌ An error occurred while loading projects.")
+        await query.edit_message_text("❌ خطایی در بارگذاری پروژه‌ها رخ داد.")
 
 async def show_project(query, db: Session, user: User, project_id: int):
     """Show project details - FIXED: Added proper error handling"""
     try:
         project = db.query(Project).filter(Project.id == project_id).first()
         if not project:
-            await query.edit_message_text("Project not found.")
+            await query.edit_message_text("پروژه یافت نشد.")
             return
         
         # Check access - FIXED: Use proper relationship checking
         if project.owner_id != user.id and user not in project.members:
-            await query.edit_message_text("Project not found or access denied.")
+            await query.edit_message_text("پروژه یافت نشد یا دسترسی رد شد.")
             return
         
         sections_count = len(project.sections)
         tasks_count = sum(len(section.tasks) for section in project.sections)
         
         text = f"📋 **{project.name}**\n\n"
-        text += f"📄 Description: {project.description or 'No description'}\n"
-        text += f"📊 Sections: {sections_count}\n"
-        text += f"✅ Total Tasks: {tasks_count}\n"
-        text += f"👑 Owner: {project.owner.first_name}\n"
-        text += f"👥 Members: {len(project.members)}\n"
+        text += f"📄 توضیحات: {project.description or 'بدون توضیحات'}\n"
+        text += f"📊 بخش‌ها: {sections_count}\n"
+        text += f"✅ کل کارها: {tasks_count}\n"
+        text += f"👑 مالک: {project.owner.first_name}\n"
+        text += f"👥 اعضا: {len(project.members)}\n"
         if project.channel_id:
-            text += f"📢 Updates Channel: {project.channel_id}\n"
+            text += f"📢 کانال به‌روزرسانی: {project.channel_id}\n"
         
         keyboard = [
-            [InlineKeyboardButton("📂 View Sections", callback_data=f"sections_{project.id}")],
-            [InlineKeyboardButton("➕ Add Section", callback_data=f"add_section_{project.id}")],
+            [InlineKeyboardButton("📂 مشاهده بخش‌ها", callback_data=f"sections_{project.id}")],
+            [InlineKeyboardButton("➕ افزودن بخش", callback_data=f"add_section_{project.id}")],
         ]
         
         if project.owner_id == user.id:
             keyboard.extend([
-                [InlineKeyboardButton("👥 Add Member", callback_data=f"add_member_{project.id}")],
-                [InlineKeyboardButton("📢 Set Channel", callback_data=f"set_channel_{project.id}")],
+                [InlineKeyboardButton("👥 افزودن عضو", callback_data=f"add_member_{project.id}")],
+                [InlineKeyboardButton("📢 تنظیم کانال", callback_data=f"set_channel_{project.id}")],
             ])
         
-        keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="list_projects")])
+        keyboard.append([InlineKeyboardButton("⬅️ بازگشت", callback_data="list_projects")])
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(text, reply_markup=reply_markup, parse_mode='Markdown')
     except Exception as e:
         logger.error(f"Error in show_project: {e}")
-        await query.edit_message_text("❌ An error occurred while loading project details.")
+        await query.edit_message_text("❌ خطایی در بارگذاری جزئیات پروژه رخ داد.")
 
 async def show_sections(query, db: Session, user: User, project_id: int):
     """Show sections - FIXED: Added proper error handling"""
     try:
         project = db.query(Project).filter(Project.id == project_id).first()
         if not project:
-            await query.edit_message_text("Project not found.")
+            await query.edit_message_text("پروژه یافت نشد.")
             return
         
         # Check access
         if project.owner_id != user.id and user not in project.members:
-            await query.edit_message_text("Project not found or access denied.")
+            await query.edit_message_text("پروژه یافت نشد یا دسترسی رد شد.")
             return
         
         sections = project.sections
         if not sections:
             keyboard = [
-                [InlineKeyboardButton("➕ Add Section", callback_data=f"add_section_{project.id}")],
-                [InlineKeyboardButton("⬅️ Back", callback_data=f"project_{project.id}")]
+                [InlineKeyboardButton("➕ افزودن بخش", callback_data=f"add_section_{project.id}")],
+                [InlineKeyboardButton("⬅️ بازگشت", callback_data=f"project_{project.id}")]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("No sections found.", reply_markup=reply_markup)
+            await query.edit_message_text("هیچ بخشی یافت نشد.", reply_markup=reply_markup)
             return
         
         keyboard = []
         for section in sections:
             tasks_count = len(section.tasks)
             keyboard.append([InlineKeyboardButton(
-                f"📂 {section.name} ({tasks_count} tasks)", 
+                f"📂 {section.name} ({tasks_count} کار)", 
                 callback_data=f"section_{section.id}"
             )])
         
         keyboard.extend([
-            [InlineKeyboardButton("➕ Add Section", callback_data=f"add_section_{project.id}")],
-            [InlineKeyboardButton("⬅️ Back", callback_data=f"project_{project.id}")]
+            [InlineKeyboardButton("➕ افزودن بخش", callback_data=f"add_section_{project.id}")],
+            [InlineKeyboardButton("⬅️ بازگشت", callback_data=f"project_{project.id}")]
         ])
         
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text(f"Sections in {project.name}:", reply_markup=reply_markup)
+        await query.edit_message_text(f"بخش‌های {project.name}:", reply_markup=reply_markup)
     except Exception as e:
         logger.error(f"Error in show_sections: {e}")
-        await query.edit_message_text("❌ An error occurred while loading sections.")
+        await query.edit_message_text("❌ خطایی در بارگذاری بخش‌ها رخ داد.")
 
 async def show_tasks(query, db: Session, user: User, section_id: int):
     """Show tasks - FIXED: Added proper error handling"""
     try:
         section = db.query(Section).filter(Section.id == section_id).first()
         if not section:
-            await query.edit_message_text("Section not found.")
+            await query.edit_message_text("بخش یافت نشد.")
             return
         
         # FIXED: Check if section has project relationship
         if not hasattr(section, 'project') or section.project is None:
-            await query.edit_message_text("Section has no associated project.")
+            await query.edit_message_text("بخش هیچ پروژه مرتبطی ندارد.")
             return
         
         project = section.project
         if project.owner_id != user.id and user not in project.members:
-            await query.edit_message_text("Access denied.")
+            await query.edit_message_text("دسترسی رد شد.")
             return
         
         tasks = section.tasks
         if not tasks:
             keyboard = [
-                [InlineKeyboardButton("➕ Add Task", callback_data=f"add_task_{section.id}")],
-                [InlineKeyboardButton("⬅️ Back", callback_data=f"sections_{project.id}")]
+                [InlineKeyboardButton("➕ افزودن کار", callback_data=f"add_task_{section.id}")],
+                [InlineKeyboardButton("⬅️ بازگشت", callback_data=f"sections_{project.id}")]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("No tasks found.", reply_markup=reply_markup)
+            await query.edit_message_text("هیچ کاری یافت نشد.", reply_markup=reply_markup)
             return
         
         keyboard = []
@@ -271,80 +271,81 @@ async def show_tasks(query, db: Session, user: User, section_id: int):
             )])
         
         keyboard.extend([
-            [InlineKeyboardButton("➕ Add Task", callback_data=f"add_task_{section.id}")],
-            [InlineKeyboardButton("⬅️ Back", callback_data=f"sections_{project.id}")]
+            [InlineKeyboardButton("➕ افزودن کار", callback_data=f"add_task_{section.id}")],
+            [InlineKeyboardButton("⬅️ بازگشت", callback_data=f"sections_{project.id}")]
         ])
         
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text(f"Tasks in {section.name}:", reply_markup=reply_markup)
+        await query.edit_message_text(f"کارهای {section.name}:", reply_markup=reply_markup)
     except Exception as e:
         logger.error(f"Error in show_tasks: {e}")
-        await query.edit_message_text("❌ An error occurred while loading tasks.")
+        await query.edit_message_text("❌ خطایی در بارگذاری کارها رخ داد.")
 
 async def show_task(query, db: Session, user: User, task_id: int):
     """Show task details - FIXED: Added proper error handling"""
     try:
         task = db.query(Task).filter(Task.id == task_id).first()
         if not task:
-            await query.edit_message_text("Task not found.")
+            await query.edit_message_text("کار یافت نشد.")
             return
         
         # FIXED: Check if task has section and project relationships
         if not hasattr(task, 'section') or task.section is None:
-            await query.edit_message_text("Task has no associated section.")
+            await query.edit_message_text("کار هیچ بخش مرتبطی ندارد.")
             return
         
         if not hasattr(task.section, 'project') or task.section.project is None:
-            await query.edit_message_text("Task section has no associated project.")
+            await query.edit_message_text("بخش کار هیچ پروژه مرتبطی ندارد.")
             return
         
         project = task.section.project
         if project.owner_id != user.id and user not in project.members:
-            await query.edit_message_text("Access denied.")
+            await query.edit_message_text("دسترسی رد شد.")
             return
         
         status_emoji = {"todo": "⭕", "in_progress": "🔄", "done": "✅"}
+        status_text = {"todo": "باید انجام شود", "in_progress": "در حال انجام", "done": "تکمیل شده"}
         text = f"{status_emoji.get(task.status, '⭕')} **{task.title}**\n\n"
-        text += f"📄 Description: {task.description or 'No description'}\n"
-        text += f"📊 Status: {task.status.replace('_', ' ').title()}\n"
-        text += f"👤 Assigned to: {task.assigned_to.first_name if task.assigned_to else 'Unassigned'}\n"
-        text += f"📅 Created: {task.created_at.strftime('%Y-%m-%d %H:%M')}\n"
+        text += f"📄 توضیحات: {task.description or 'بدون توضیحات'}\n"
+        text += f"📊 وضعیت: {status_text.get(task.status, 'نامشخص')}\n"
+        text += f"👤 واگذار شده به: {task.assigned_to.first_name if task.assigned_to else 'واگذار نشده'}\n"
+        text += f"📅 تاریخ ایجاد: {task.created_at.strftime('%Y-%m-%d %H:%M')}\n"
         
         keyboard = [
             [
-                InlineKeyboardButton("⭕ To Do", callback_data=f"status_{task.id}_todo"),
-                InlineKeyboardButton("🔄 In Progress", callback_data=f"status_{task.id}_in_progress"),
-                InlineKeyboardButton("✅ Done", callback_data=f"status_{task.id}_done"),
+                InlineKeyboardButton("⭕ باید انجام شود", callback_data=f"status_{task.id}_todo"),
+                InlineKeyboardButton("🔄 در حال انجام", callback_data=f"status_{task.id}_in_progress"),
+                InlineKeyboardButton("✅ تکمیل شده", callback_data=f"status_{task.id}_done"),
             ],
-            [InlineKeyboardButton("⬅️ Back", callback_data=f"section_{task.section.id}")]
+            [InlineKeyboardButton("⬅️ بازگشت", callback_data=f"section_{task.section.id}")]
         ]
         
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.edit_message_text(text, reply_markup=reply_markup, parse_mode='Markdown')
     except Exception as e:
         logger.error(f"Error in show_task: {e}")
-        await query.edit_message_text("❌ An error occurred while loading task details.")
+        await query.edit_message_text("❌ خطایی در بارگذاری جزئیات کار رخ داد.")
 
 async def update_task_status(query, db: Session, user: User, task_id: int, new_status: str):
     """Update task status - FIXED: Added proper error handling"""
     try:
         task = db.query(Task).filter(Task.id == task_id).first()
         if not task:
-            await query.edit_message_text("Task not found.")
+            await query.edit_message_text("کار یافت نشد.")
             return
         
         # FIXED: Check relationships
         if not hasattr(task, 'section') or task.section is None:
-            await query.edit_message_text("Task has no associated section.")
+            await query.edit_message_text("کار هیچ بخش مرتبطی ندارد.")
             return
         
         if not hasattr(task.section, 'project') or task.section.project is None:
-            await query.edit_message_text("Task section has no associated project.")
+            await query.edit_message_text("بخش کار هیچ پروژه مرتبطی ندارد.")
             return
         
         project = task.section.project
         if project.owner_id != user.id and user not in project.members:
-            await query.edit_message_text("Access denied.")
+            await query.edit_message_text("دسترسی رد شد.")
             return
         
         old_status = task.status
@@ -381,7 +382,7 @@ async def update_task_status(query, db: Session, user: User, task_id: int, new_s
         await show_task(query, db, user, task_id)
     except Exception as e:
         logger.error(f"Error in update_task_status: {e}")
-        await query.edit_message_text("❌ An error occurred while updating task status.")
+        await query.edit_message_text("❌ خطایی در به‌روزرسانی وضعیت کار رخ داد.")
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Message handler - FIXED: Added proper error handling"""
@@ -400,11 +401,11 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             db.commit()
             db.refresh(project)
             
-            keyboard = [[InlineKeyboardButton("📋 View Projects", callback_data="list_projects")]]
+            keyboard = [[InlineKeyboardButton("📋 مشاهده پروژه‌ها", callback_data="list_projects")]]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
             await update.message.reply_text(
-                f"✅ Project '{text}' created successfully!",
+                f"✅ پروژه '{text}' با موفقیت ایجاد شد!",
                 reply_markup=reply_markup
             )
             
@@ -439,15 +440,15 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 else:
                     logger.info(f"No channel configured for project: {project.name}")
                 
-                keyboard = [[InlineKeyboardButton("📂 View Sections", callback_data=f"sections_{project_id}")]]
+                keyboard = [[InlineKeyboardButton("📂 مشاهده بخش‌ها", callback_data=f"sections_{project_id}")]]
                 reply_markup = InlineKeyboardMarkup(keyboard)
                 
                 await update.message.reply_text(
-                    f"✅ Section '{text}' added successfully!",
+                    f"✅ بخش '{text}' با موفقیت اضافه شد!",
                     reply_markup=reply_markup
                 )
             else:
-                await update.message.reply_text("❌ Project not found or access denied.")
+                await update.message.reply_text("❌ پروژه یافت نشد یا دسترسی رد شد.")
         
         elif action.startswith('add_task_'):
             section_id = int(action.split('_')[2])
@@ -456,7 +457,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if section:
                 # FIXED: Check project relationship
                 if not hasattr(section, 'project') or section.project is None:
-                    await update.message.reply_text("❌ Section has no associated project.")
+                    await update.message.reply_text("❌ بخش هیچ پروژه مرتبطی ندارد.")
                     return
                 
                 project = section.project
@@ -489,17 +490,17 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     else:
                         logger.info(f"No channel configured for project: {project.name}")
                     
-                    keyboard = [[InlineKeyboardButton("📝 View Tasks", callback_data=f"section_{section_id}")]]
+                    keyboard = [[InlineKeyboardButton("📝 مشاهده کارها", callback_data=f"section_{section_id}")]]
                     reply_markup = InlineKeyboardMarkup(keyboard)
                     
                     await update.message.reply_text(
-                        f"✅ Task '{text}' added successfully!",
+                        f"✅ کار '{text}' با موفقیت اضافه شد!",
                         reply_markup=reply_markup
                     )
                 else:
-                    await update.message.reply_text("❌ Access denied.")
+                    await update.message.reply_text("❌ دسترسی رد شد.")
             else:
-                await update.message.reply_text("❌ Section not found.")
+                await update.message.reply_text("❌ بخش یافت نشد.")
         
         elif action.startswith('add_member_'):
             project_id = int(action.split('_')[2])
@@ -514,15 +515,15 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         if new_user not in project.members:
                             project.members.append(new_user)
                             db.commit()
-                            await update.message.reply_text(f"✅ User {new_user.first_name} added to project!")
+                            await update.message.reply_text(f"✅ کاربر {new_user.first_name} به پروژه اضافه شد!")
                         else:
-                            await update.message.reply_text("❌ User is already a member of this project.")
+                            await update.message.reply_text("❌ کاربر قبلاً عضو این پروژه است.")
                     else:
-                        await update.message.reply_text("❌ User not found. They need to start the bot first.")
+                        await update.message.reply_text("❌ کاربر یافت نشد. ابتدا باید ربات را شروع کنند.")
                 except ValueError:
-                    await update.message.reply_text("❌ Invalid Telegram ID. Please send a numeric ID.")
+                    await update.message.reply_text("❌ شناسه تلگرام نامعتبر است. لطفاً یک شناسه عددی ارسال کنید.")
             else:
-                await update.message.reply_text("❌ Project not found or you're not the owner.")
+                await update.message.reply_text("❌ پروژه یافت نشد یا شما مالک نیستید.")
         
         elif action.startswith('set_channel_'):
             project_id = int(action.split('_')[2])
@@ -531,25 +532,25 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if project and project.owner_id == user.id:
                 project.channel_id = text
                 db.commit()
-                await update.message.reply_text(f"✅ Update channel set to: {text}")
+                await update.message.reply_text(f"✅ کانال به‌روزرسانی به {text} تنظیم شد")
             else:
-                await update.message.reply_text("❌ Project not found or you're not the owner.")
+                await update.message.reply_text("❌ پروژه یافت نشد یا شما مالک نیستید.")
         
         # Clear the action
         del context.user_data['action']
         
     except Exception as e:
         logger.error(f"Error in message handler: {e}")
-        await update.message.reply_text("❌ An error occurred. Please try again.")
+        await update.message.reply_text("❌ خطایی رخ داد. لطفاً دوباره تلاش کنید.")
     finally:
         db.close()
 
 def main():
     """Main function"""
     if BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
-        print("❌ Error: Please set your bot token!")
-        print("1. Get a token from @BotFather on Telegram")
-        print("2. Replace 'YOUR_BOT_TOKEN_HERE' with your actual token")
+        print("❌ خطا: لطفاً توکن ربات خود را تنظیم کنید!")
+        print("1. از @BotFather در تلگرام توکن دریافت کنید")
+        print("2. 'YOUR_BOT_TOKEN_HERE' را با توکن واقعی خود جایگزین کنید")
         return
     
     try:
@@ -559,12 +560,12 @@ def main():
         application.add_handler(CallbackQueryHandler(button_handler))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
         
-        print("🚀 Bot starting...")
-        print("Press Ctrl+C to stop")
+        print("🚀 ربات در حال راه‌اندازی...")
+        print("برای توقف Ctrl+C را فشار دهید")
         application.run_polling()
     except Exception as e:
-        print(f"❌ Error starting bot: {e}")
-        print("Make sure your bot token is correct!")
+        print(f"❌ خطا در راه‌اندازی ربات: {e}")
+        print("مطمئن شوید که توکن ربات شما صحیح است!")
 
 if __name__ == "__main__":
     main()
